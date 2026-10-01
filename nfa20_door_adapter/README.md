@@ -2,100 +2,108 @@
 
 Two designs live here.
 
-* **v2 (current): external housing, clamped to the cutout.** The NF-A20 mounts
-  on the *outside* of the door in a 226 mm square housing with a base plinth,
-  skirt, spoke grille, magnetic mesh dust filter, and a cable window at the
-  bottom-left corner for the fan lead to run round to the rear grommet. The
-  plinth has a collar that passes through the 187 mm hole and an inner ring
-  inside the case bolts to it, so the steel's hole edge is clamped between two
-  rings rather than hanging off four bolts. Files: `stl_v2/`,
-  `build_housing.py`, `nfa20_door_housing.scad`, `plan_v2.png`,
-  `preview/renders_v2.png`.
+* **v3 (current): round external housing, clamped to the cutout.** The
+  NF-A20 mounts on the *outside* of the door. Everything stays inside the
+  acrylic window's inner edge (r 114.7 mm) so the acrylic is unobstructed:
+  a round plinth with a collar through the 187 mm hole, an inner ring inside
+  the case that clamps the steel between the two, a cylindrical skirt with
+  four windows the fan's corners poke through, a spoke-grille front plate and
+  a magnetic mesh dust-filter bezel. The fan lead leaves through whichever
+  corner window you turn it to (bottom-left) and runs round to the rear
+  grommet. Files: `stl_v2/`, `build_housing.py`, `nfa20_door_housing.scad`,
+  `plan_v2.png`, `preview/renders_v2.png`, `preview/section_v3.png`.
 * **v1: inside-mount ring.** The original bare adapter ring for mounting the
   fan on the inside face of the door. Kept for reference at the bottom of this
   file. Files: `stl/`, `build_adapter.py`, `nfa20_door_adapter.scad`, `plan.png`.
 
-Both builders produce identical solids from the OpenSCAD and Python sources.
+Both builders produce identical solids from the OpenSCAD and Python sources,
+and every printed part is checked to be a single body.
 
 ---
 
-## v2: external housing
+## v3: round housing
 
 ### What the photos add to the measurements
 
 Fitting a perspective transform to the eight ring holes (all within 1 mm)
-puts the acrylic window's fasteners on a **125 mm radius** at 96, 44, 0, -45
+puts the acrylic window's cap nuts on a **125 mm radius** at 96, 44, 0, -45
 and -96 degrees (outside view), and the acrylic's inner edge at **r 114.7 mm**.
-The two nuts at +/-45 degrees sit directly under the fan's corners, so the fan
-has to stand off the steel; the acrylic step means the base can only bear on
-bare steel inside r 112.5.
+The steel annulus between the cutout and that edge is flat and about 3 mm
+below the acrylic. The plinth's outer radius is 114 so it follows that edge
+with 0.7 mm to spare; the two cap nuts at +/-45 degrees are under the fan's
+corners, which is why the fan sits 14 mm off the steel.
 
 ### How the clamp works
 
 ![section](preview/section_v3.png)
 
-* The plinth's bore continues as a **collar**, 185.8 mm OD with a 2.2 mm wall,
+* The plinth's bore continues as a **collar**, 185.8 mm OD, 2.2 mm wall,
   9.4 mm long, that drops through the 187 mm cutout. It centres the housing
-  on the hole and takes any shear load, so the bolts only ever see tension.
+  and takes shear, so the bolts only see tension.
 * An **inner ring** (r 93.2 to 117, 8 mm, four pieces) slides over the collar
-  on the inside of the door. Four M5 x 20 socket screws go through it, through
-  the door's top/bottom/left/right ring holes, into nuts captured in the
-  plinth. The steel is sandwiched between the inner ring and the plinth's
-  bearing band (r 90.7 to 112.5), which is the bare-steel annulus inside the
-  acrylic edge.
-* The inner ring's steel-side face is relieved 1.5 mm beyond r 113 so it
-  clears the near-flush acrylic screw heads on the inside (r 119 to 128).
-* The collar ends 0.5 mm proud of the inner ring, with a 0.8 mm lead-in
-  chamfer. The throat through plinth and collar is 181.4 mm; the fan's own
-  opening is about 190 mm, so the step is small.
+  inside the door. Four M5 x 20 socket screws go through it, through the
+  door's top/bottom/left/right ring holes, into nuts captured in the plinth.
+  The steel is sandwiched between the inner ring and the plinth's bearing
+  band (r 90.7 to 112.5), the bare-steel annulus inside the acrylic edge.
+* The inner ring's steel face is relieved 1.5 mm beyond r 113 to clear the
+  near-flush acrylic screw heads on the inside (r 119 to 128).
 
 ### Stack, from the steel outward
 
 | z (mm) | Part | Notes |
 |---|---|---|
-| -9.4 to 0 | collar + inner ring (4 pinwheel pieces) | collar through the cutout; inner ring on the inside face, counterbored for the M5 heads |
-| 0 to 14 | flange plinth (4 pinwheel pieces) | 226 mm rounded square. Bears on steel r 94.5 to 112.5 only. Underside relieved 4.5 mm beyond r 112.5 (acrylic step) and 12 mm beyond r 118 (cap nuts). |
-| 14 to 44 | NF-A20 | exhaust face on the plinth, intake outward. Screwed to the plinth from underneath with 4 stock fan screws (counterbored, hidden against the steel). |
-| 14.5 to 44 | skirt (4 corner pieces) | 3 mm walls, 10 mm clearance to the fan, sits on the plinth with a 0.5 mm reveal. Corner pieces lap-joint at the wall seams. |
-| 44 to 49 | front plate + spoke grille | 5 mm plate, 16 spokes and 3 rings, 3 mm thick. Attached to the fan's front with 4 more stock fan screws (counterbored). |
-| 49 to 49.3 | mesh | your filter mesh, cut ~205 x 205 mm |
-| 49.3 to 52.8 | bezel (4 pinwheel pieces) | 3.5 mm, r 92 opening, held by 8 pairs of 6 x 2 mm magnets. Pull it off to clean the mesh. |
+| -9.4 to 0 | collar + inner ring (4 pinwheel pieces) | collar through the cutout; inner ring counterbored for the M5 heads |
+| 0 to 14 | plinth (4 pinwheel pieces) | round, r 90.7 to 114. Bears on steel r 90.7 to 112.5; door face relieved 4.5 mm beyond that as a safety against the acrylic step. M5 nut pockets at r 104 on the axes; blind M4 holes at the fan corners. |
+| 14 to 44 | NF-A20 | exhaust face on the plinth, intake outward |
+| 14.5 to 44 | skirt (4 quadrants) | cylinder r 111 to 114, sits on the plinth with a 0.5 mm reveal. Four 41.5-degree windows on the diagonals let the fan's corners through. Lap joints at the four seams on the axes. |
+| 44 to 49 | front plate + spoke grille | round, r 95 to 117 (a 3 mm lip over the skirt), 16 spokes and 3 rings. |
+| 49 to 49.3 | mesh | cut round, ~235 mm, or square 235 with the corners clipped |
+| 49.3 to 52.8 | bezel (4 pinwheel arcs) | r 92 to 117, held by 8 pairs of 6 x 2 mm magnets. Pull it off to clean the mesh. |
 
 Total stand-off from the door: about 53 mm outside, 9.4 mm inside.
 
 ### Why it's shaped this way
 
-* **Door bolts on the axes, fan screws on the diagonals** (same reason as v1:
-  the fan holes at r 108.9 sit only 5 mm from the door's diagonal holes).
-  The M5 bolts go in from *inside* the case through the inner ring into nuts
-  captured in the plinth, so nothing shows on the outside and the fan can go
-  on before the plinth goes on the door.
-* **The plinth is a full 226 mm square, not a ring**, because a 117 mm ring
-  would have run under the skirt walls. Making it the housing's base also
-  closes the gap under the skirt. The housing is 226 rather than 210 because
-  the M5 nut pockets at r 104 on the axes need 3 mm of wall outside them; at
-  10 mm fan clearance the skirt still clears the acrylic's cap nuts by 9 mm.
-* **Housing seams are on the axes** (each corner piece is a symmetric L) and
-  **bezel seams are 11.25 degrees off the axes**, with the magnets at 5 and 40
-  degrees in each quadrant, so every bezel piece is held by one magnet on each
-  of two housing pieces and ties the housing seams together.
+* **Door bolts on the axes, fan screws on the diagonals** (the fan holes at
+  r 108.9 sit only 5 mm from the door's diagonal holes). The M5 bolts go in
+  from *inside* the case through the inner ring into nuts captured in the
+  plinth, so nothing shows on the outside.
+* **The fan is held by four M4 x 40 screws from the front**, through the
+  plate, down the fan's own corner holes, into blind 3.6 mm thread-forming
+  holes in the plinth (7.5 mm of engagement). One set of screws clamps plate,
+  fan and plinth together. Set `FAN_INSERT` for M4 heat-set inserts instead.
+  A round plinth of r 114 has no room for the screw-head counterbores the
+  earlier square version used from underneath.
+* **The fan's corners are allowed out through the skirt** rather than
+  enclosed: a 200 mm square fan needs a 290 mm cylinder to swallow its
+  corners, which would cover the acrylic. The windows are sized from the
+  skirt's inner radius plus 1.5 degrees of clearance per side.
+* **Housing seams are on the axes** and **bezel seams 11.25 degrees off
+  them**, with magnets at 5 and 40 degrees in each quadrant, so every bezel
+  arc is held by one magnet on each of two housing quadrants and ties the
+  housing seams together.
 * **Grille seams run down the middle of the 0/90/180/270 spokes**, so the
   split shows as a hairline in a spoke rather than a broken ring.
-* **Cable window**: the bottom-left corner piece has a 28 x 28 mm window in
-  the skirt from the plinth up to z 36, plus two 4 x 3 mm slots on the bottom
-  wall for a cable tie. Rotate the fan so its lead leaves at that corner; the
-  lead exits the window, drops down the 14 mm plinth wall to the door, and
-  runs off to the rear grommet.
+* **Cable**: turn the fan so its lead leaves at the bottom-left corner; it
+  comes straight out of that corner window, down the 14 mm plinth wall to the
+  door, and off to the rear grommet. Every quadrant has two 4 x 3 mm slots in
+  the skirt beside its window for a cable tie, so any corner works.
+* **Every sector is one solid.** The first version's sector code left a
+  0.25 mm radial gap between a piece's inner and outer bands (the seam
+  clearance was applied inside the piece as well as between pieces), which
+  the slicer would have printed as two slivers. The sector builder now
+  overlaps the bands inside the body and trims only the tongues; the build
+  prints the body count for every part and the checks require 1.
 
 ### Hardware
 
 | Qty | Item | Where |
 |---|---|---|
-| 4 | M5 x 20 socket or button head | from inside the case through the inner ring's counterbores and the door's top/bottom/left/right ring holes |
+| 4 | M5 x 20 socket or button head | from inside the case through the inner ring and the door's top/bottom/left/right ring holes |
 | 4 | M5 plain hex nut | plinth pockets (fan face); ISO 4032 (4.7 mm) or DIN 934 (4.0 mm) both fit, nyloc doesn't |
-| 8 | standard self-tapping fan screws | 4 plinth-to-fan (from underneath), 4 plate-to-fan (from the front). The Noctua box has 4. |
-| 16 | 6 x 2 mm neodymium disc magnets | 8 in the plate, 8 in the bezel. Mind polarity: set all plate magnets the same way up, then let each bezel magnet snap onto its partner before gluing. Press-fit; a drop of CA to be sure. |
-| 1 | mesh, ~205 x 205 mm | cut from a cheap 200 mm PC dust filter or fine nylon mesh |
+| 4 | M4 x 40 socket head (7 mm head) | from the front, through plate and fan corner, into the plinth. M4 x 45 also fits. |
+| 16 | 6 x 2 mm neodymium disc magnets | 8 in the plate, 8 in the bezel. Set all plate magnets the same way up, then let each bezel magnet snap onto its partner before gluing. Press-fit plus a drop of CA. |
+| 1 | mesh, ~235 mm across | cut from a cheap 200 mm PC dust filter or fine nylon mesh |
 | 1 | cable tie | optional strain relief at the window |
 
 ### Printing (A1 mini)
@@ -104,46 +112,56 @@ All parts are exported with their print face on Z = 0. No supports.
 
 | File | Print | Footprint | Orientation |
 |---|---|---|---|
-| `flange_sector_x4.stl` | 4 | 171 x 87 x 23.4 | fan face down; the collar stands up from the door face, no support |
-| `inner_ring_sector_x4.stl` | 4 | 170 x 57 x 8 | steel face down |
-| `housing_corner_x3.stl` | 3 | 119 x 119 x 34.5 | front face down, walls up |
-| `housing_corner_cable_x1.stl` | 1 | 119 x 119 x 34.5 | same |
-| `bezel_sector_x4.stl` | 4 | 163 x 89 x 3.5 | front face down |
+| `flange_sector_x4.stl` | 4 | 166 x 56 x 23.4 | fan face down; the collar stands up from the door face |
+| `inner_ring_sector_x4.stl` | 4 | 168 x 57 x 8 | steel face down |
+| `housing_quadrant_x4.stl` | 4 | 168 x 98 x 34.5 | front face down, skirt arcs up |
+| `bezel_sector_x4.stl` | 4 | 165 x 52 x 3.5 | front face down |
 
-PETG or PLA, 0.2 mm layers, 4 walls, 30 % infill. One corner piece per plate;
-the flange, inner ring and bezel pieces go one per plate, rotated 45 degrees
-if the slicer complains about the 170 mm length. The seams have 0.25 mm total clearance; if your printer
-runs fat, scale nothing, just sand the lap tongues.
+PETG or PLA, 0.2 mm layers, 4 walls, 30 % infill. One piece per plate for
+the quadrants; two per plate for the others. Rotate 45 degrees on the plate
+if the slicer complains about the 168 mm length. Every mating face has
+0.25 mm of clearance; if a lap is tight, sand the tongue.
 
 ### Assembly
 
-1. Press magnets into the 8 plate pockets and 8 bezel pockets (see polarity note).
+1. Press magnets into the 8 plate pockets and 8 bezel pockets (polarity note above).
 2. Drop an M5 nut into each plinth piece's hex pocket.
-3. Lay the four plinth pieces on the fan's **exhaust** face, laps interlocked,
-   and drive a fan screw through each deep counterbore into the fan corner.
-4. Set the four corner pieces over the fan's **intake** face (laps interlocked,
-   the cable-window piece at the fan's cable corner) and drive a fan screw
-   through each front counterbore into the fan.
-5. Feed the fan lead out through the window; tie it off through the slots.
-6. Offer the whole unit up to the outside of the door with the cable window
-   bottom-left, collar into the cutout. From inside, slide the four inner
-   ring pieces over the collar (laps interlocked, bolt holes on the
-   top/bottom/left/right ring holes) and fit the four M5 x 20 screws.
-7. Lay the mesh on the front plate and snap the four bezel pieces on.
+3. Lay the four plinth pieces together on the bench, laps interlocked. Set the
+   fan on them, exhaust side down, corners over the blind holes.
+4. Set the four housing quadrants over the fan (laps interlocked) and drive
+   the four M4 x 40 screws through the plate and fan into the plinth. The
+   unit is now one piece. Turn the fan so its lead is at the window you want
+   at bottom-left before tightening.
+5. Feed the lead out of the window; tie it off through the slots.
+6. Offer the unit up to the outside of the door, collar into the cutout.
+   From inside, slide the four inner ring pieces over the collar (laps
+   interlocked, bolt holes on the top/bottom/left/right ring holes) and fit
+   the four M5 x 20 screws.
+7. Lay the mesh on the front plate and snap the four bezel arcs on.
 
 ### Checks before printing all of it
 
-* Print one `flange_sector` first and offer it up to the door: the collar
-  quarter should drop into the cutout (if it binds, the hole is under 186 mm:
-  reduce `COLLAR_OD`; if it rattles by more than a millimetre, raise it), the
-  slot should land on a ring hole, the bearing band should sit flat, and the
-  outer skin must clear the acrylic's cap nuts. If a nut is taller than ~8 mm above the
-  acrylic, raise `DEEP_RELIEF_DEPTH` (or `Z_FLANGE`).
-* Print one `housing_corner` and one `bezel_sector` and check the magnet fit.
+* Print one `flange_sector` and offer it up: the collar quarter should drop
+  into the cutout (binds: the hole is under 186 mm, lower `COLLAR_OD`;
+  rattles by more than a millimetre: raise it), the slot should land on a
+  ring hole, the outer edge should sit just inside the acrylic's edge.
+* Print one `housing_quadrant` and one `bezel_sector` and check the magnet
+  fit and that the M4 head sits below the plate face.
+
+### Verification done on the model
+
+* Boolean intersections of all printed parts against the door steel (187 and
+  186 mm holes), the fan body, the acrylic sheet, cap nuts up to 8 mm tall,
+  and the M4 and M5 screw bodies: all zero except the intended thread zone.
+* Pairwise intersections between every pair of printed parts: zero; minimum
+  clearance between neighbouring pieces 0.24 to 0.30 mm.
+* Each part is one watertight body. The OpenSCAD and Python sources render to
+  identical volumes and bounding boxes for all four parts.
 
 ---
 
 ## v1: inside-mount adapter ring (original design)
+
 
 Adapter ring that mounts a Noctua NF-A20 (200 x 200 x 30 mm, 154 mm hole
 square) on the inside of the case door, over the door's ~187 mm round cutout,
