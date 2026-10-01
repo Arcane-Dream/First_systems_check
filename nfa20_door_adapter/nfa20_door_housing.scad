@@ -7,6 +7,7 @@
 //   openscad -o corner.stl  -D 'part="corner"'        nfa20_door_housing.scad
 //   openscad -o cable.stl   -D 'part="corner_cable"'  nfa20_door_housing.scad
 //   openscad -o bezel.stl   -D 'part="bezel"'         nfa20_door_housing.scad
+//   openscad -o inner.stl   -D 'part="inner"'         nfa20_door_housing.scad
 //   openscad -o asm.stl     -D 'part="assembly"'      nfa20_door_housing.scad
 // Single parts are exported already flipped for printing (print face on Z=0).
 
@@ -19,7 +20,12 @@ cutout_d     = 187;
 fan_w        = 200;  fan_t = 30;  fan_hole_xy = 77;   // 154 mm pitch
 // ---- flange plinth ----------------------------------------------------------
 z_flange     = 14;
-r_in         = 94.5;  r_out = 160;  r_mid = 105.5;
+r_in         = 90.7;  r_out = 160;  r_mid = 105.5;   // r_in = bore of plinth + collar
+collar_od    = 185.8; collar_wall = 2.2; collar_chamfer = 0.8;   // spigot through the 187 mm hole
+steel_t      = 0.86;
+inner_t      = 8;  inner_r_in = collar_od / 2 + 0.25;  inner_r_out = 117;
+inner_r_bear = 113;  inner_relief = 1.5;  inner_cbore_d = 9.5;  inner_cbore = 4;
+collar_h     = steel_t + inner_t + 0.5;
 lap_half     = 5;     seam_gap = 0.25;
 r_bear       = 112.5; relief_depth = 4.5;
 r_deep       = 118;   deep_relief_depth = 12;
@@ -28,8 +34,8 @@ nut_af       = 8.3;   nut_pocket = 6;
 fan_screw_d  = 4.5;   fan_head_d = 8.6;
 flange_cbore = z_flange - 3.5;
 // ---- housing ----------------------------------------------------------------
-wall = 3; clear = 2;
-house_half   = fan_w / 2 + clear + wall;         // 105
+wall = 3; clear = 10;    // 10 mm fan-to-skirt so the nut pockets at r 104 stay inside the plinth
+house_half   = fan_w / 2 + clear + wall;         // 113 -> 226 square
 house_r      = 8;
 z_skirt      = z_flange + 0.5;
 z_fan_top    = z_flange + fan_t;                 // 44
@@ -39,7 +45,7 @@ plate_open_r = 95;
 front_cbore  = 2.5;
 grille_t     = 3;  grille_rings = [28, 50, 72];  grille_bar = 3;  grille_spokes = 16;
 wall_lap     = 6;
-tip_notch    = [7, 3];
+tip_notch    = [0, 0];   // notch over the door screws; unused at 10 mm clearance
 cable_win    = 28;  cable_win_top = 36;
 tie_slot     = [4, 3];  tie_slot_y = [66, 58];  tie_slot_z = 22;
 // ---- bezel ------------------------------------------------------------------
@@ -68,13 +74,22 @@ module flange_sector() {
     a0 = -22.5; a1 = 67.5;
     g_out = (seam_gap / 2 / r_out) * 180 / PI;
     g_in  = (seam_gap / 2 / r_in)  * 180 / PI;
+    r_co = collar_od / 2;
     difference() {
-        intersection() {
-            union() {
-                ann_sector(r_mid + seam_gap / 2, r_out, a0 + lap_half + g_out, a1 + lap_half - g_out, z_flange);
-                ann_sector(r_in, r_mid - seam_gap / 2, a0 - lap_half + g_in, a1 - lap_half - g_in, z_flange);
+        union() {
+            intersection() {
+                union() {
+                    ann_sector(r_mid + seam_gap / 2, r_out, a0 + lap_half + g_out, a1 + lap_half - g_out, z_flange);
+                    ann_sector(r_in, r_mid - seam_gap / 2, a0 - lap_half + g_in, a1 - lap_half - g_in, z_flange);
+                }
+                rsq(house_half, house_r, z_flange + 2, -1);
             }
-            rsq(house_half, house_r, z_flange + 2, -1);
+            ann_sector(r_in, r_co, a0 - lap_half + g_in, a1 - lap_half - g_in, collar_h + 0.01, -collar_h);
+        }
+        // chamfer on the collar's leading edge
+        difference() {
+            cylz(2 * r_co + 2, collar_chamfer + 0.02, 0, 0, -collar_h - 0.01, 256);
+            translate([0, 0, -collar_h]) cylinder(h = collar_chamfer, r1 = r_co - collar_chamfer, r2 = r_co + 0.01, $fn = 256);
         }
         radial_slot(door_bcd / 2, 0, door_play) translate([0, 0, -1]) cylinder(h = z_flange + 2, d = door_screw_d, $fn = 48);
         radial_slot(door_bcd / 2, 0, door_play) translate([0, 0, z_flange - nut_pocket]) cylinder(h = nut_pocket + 1, r = nut_af / sqrt(3), $fn = 6);
@@ -82,6 +97,22 @@ module flange_sector() {
         cylz(fan_head_d, flange_cbore + 1, fan_hole_xy, fan_hole_xy, -1);
         ann_sector(r_bear, r_out + 1, a0 - 20, a1 + 20, relief_depth + 1, -1);
         ann_sector(r_deep, r_out + 1, a0 - 20, a1 + 20, deep_relief_depth + 1, -1);
+    }
+}
+
+// -------------------------------------------------------------- inner ring
+module inner_ring_sector() {
+    a0 = -45; a1 = 45; z0 = -steel_t - inner_t;
+    g_out = (seam_gap / 2 / inner_r_out) * 180 / PI;
+    g_in  = (seam_gap / 2 / inner_r_in)  * 180 / PI;
+    difference() {
+        union() {
+            ann_sector(r_mid + seam_gap / 2, inner_r_out, a0 + lap_half + g_out, a1 + lap_half - g_out, inner_t, z0);
+            ann_sector(inner_r_in, r_mid - seam_gap / 2, a0 - lap_half + g_in, a1 - lap_half - g_in, inner_t, z0);
+        }
+        radial_slot(door_bcd / 2, 0, door_play) translate([0, 0, z0 - 1]) cylinder(h = inner_t + 2, d = door_screw_d, $fn = 48);
+        radial_slot(door_bcd / 2, 0, door_play) translate([0, 0, z0 - 1]) cylinder(h = inner_cbore + 1, d = inner_cbore_d, $fn = 48);
+        ann_sector(inner_r_bear, inner_r_out + 1, a0 - 20, a1 + 20, inner_relief + 1, -steel_t - inner_relief);
     }
 }
 
@@ -112,8 +143,10 @@ module housing_corner(cable = false) {
         }
         boxz(xi - 1, xm + g, -1, wall_lap + g, zb, zt);          // right wall inner half, cut back
         boxz(-1, wall_lap + g, xm + g, xo + 1, zb, zt);          // top wall outer half, cut back
-        boxz(xi - 1, xo + 1, -tip_notch[0], tip_notch[0], zb, z_skirt + tip_notch[1]);
-        boxz(-tip_notch[0], tip_notch[0], xi - 1, xo + 1, zb, z_skirt + tip_notch[1]);
+        if (tip_notch[1] > 0) {
+            boxz(xi - 1, xo + 1, -tip_notch[0], tip_notch[0], zb, z_skirt + tip_notch[1]);
+            boxz(-tip_notch[0], tip_notch[0], xi - 1, xo + 1, zb, z_skirt + tip_notch[1]);
+        }
         cylz(fan_screw_d, plate_t + 2, fan_hole_xy, fan_hole_xy, z_fan_top - 1);
         cylz(fan_head_d, front_cbore + 1, fan_hole_xy, fan_hole_xy, z_plate_top - front_cbore);
         for (a = magnet_angles) cylz(magnet_d, magnet_h + 1, magnet_r * cos(a), magnet_r * sin(a), z_plate_top - magnet_h);
@@ -148,7 +181,8 @@ module bezel_sector() {
 module flip(z_top) rotate([180, 0, 0]) translate([0, 0, -z_top]) children();
 
 if (part == "flange")            flip(z_flange) rotate(-22.5) flange_sector();
+else if (part == "inner")        flip(-steel_t) inner_ring_sector();
 else if (part == "corner")       flip(z_plate_top) housing_corner(false);
 else if (part == "corner_cable") flip(z_plate_top) housing_corner(true);
 else if (part == "bezel")        flip(z_plate_top + mesh_t + bezel_t) rotate(-(bezel_a0 + 45)) bezel_sector();
-else for (k = [0 : 3]) rotate(90 * k) { flange_sector(); housing_corner(k == 2); bezel_sector(); }
+else for (k = [0 : 3]) rotate(90 * k) { flange_sector(); inner_ring_sector(); housing_corner(k == 2); bezel_sector(); }

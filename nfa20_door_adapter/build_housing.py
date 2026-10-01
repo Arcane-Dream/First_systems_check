@@ -8,7 +8,8 @@ Frame of reference (all parts are modelled here, then flipped for printing):
   x right, y up, AS SEEN FROM OUTSIDE THE CASE
   z       = 0 at the steel's outer face, +z away from the case
 
-Stack (z, mm):     0 .. 14  flange plinth, 210 mm rounded square (bears on steel r 94.5..112.5,
+Stack (z, mm):  -9.4 .. 0   collar through the cutout, and the inner ring (-8.9 .. -0.9)
+                   0 .. 14  flange plinth, 226 mm rounded square (bears on steel r 90.7..112.5,
                             underside relieved 4.5 mm beyond r 112.5 and 12 mm beyond r 118)
                   14 .. 44  NF-A20 (exhaust face on the flange, intake out)
                   44 .. 49  housing front plate with spoke grille
@@ -17,7 +18,8 @@ Stack (z, mm):     0 .. 14  flange plinth, 210 mm rounded square (bears on steel
                 14.5 .. 44  skirt wall (hangs from the plate, sits on the plinth)
 
 Parts (print counts):
-  flange_sector        x4   pinwheel quarters of the 210 mm base plinth / mounting ring
+  flange_sector        x4   pinwheel quarters of the 210 mm base plinth, with the collar
+  inner_ring_sector    x4   backing ring inside the case; clamps the steel to the plinth
   housing_corner       x3   symmetric corner L (front plate + grille + skirt)
   housing_corner_cable x1   same, with the cable window + tie slots; goes bottom-left
   bezel_sector         x4   pinwheel L, clamps the mesh, held by 8 magnet pairs
@@ -50,7 +52,22 @@ FAN_CORNER_R = 8.0
 
 # --------------------------------------------------------------- flange ring
 Z_FLANGE = 14.0           # thickness; fan back face sits here
-R_IN = 94.5
+R_IN = 90.7               # bore through plinth and collar (181.4 mm throat)
+# collar: a short spigot on the plinth's door face that passes through the
+# 187 mm cutout and is gripped by the inner ring -> the steel's hole edge is
+# clamped between plinth and inner ring, the collar carries shear & centring.
+COLLAR_OD = 185.8         # 0.6 mm radial clearance to a 187 mm hole; tune after a test print
+COLLAR_WALL = 2.2
+COLLAR_CHAMFER = 0.8
+# inner backing ring (inside the case)
+INNER_T = 8.0
+INNER_R_IN = COLLAR_OD / 2 + 0.25
+INNER_R_OUT = 117.0
+INNER_R_BEAR = 113.0      # the inside face has near-flush acrylic screw heads at r 119-128
+INNER_RELIEF = 1.5
+INNER_CBORE_D = 9.5       # M5 socket/button head, from inside the case
+INNER_CBORE_DEPTH = 4.0
+COLLAR_H = STEEL_T + INNER_T + 0.5   # protrudes 0.5 mm past the inner ring
 R_OUT = 160.0             # band cutter radius; real outline is the 210 mm rounded square
 R_MID = 105.5
 LAP_HALF = 5.0            # deg
@@ -69,8 +86,8 @@ FLANGE_FAN_CBORE_DEPTH = Z_FLANGE - 3.5   # 3.5 mm floor -> 6.5 mm thread in fan
 
 # ------------------------------------------------------------------ housing
 WALL = 3.0
-CLEAR = 2.0
-HOUSE_HALF = FAN_W / 2 + CLEAR + WALL      # 105 -> 210 square outside
+CLEAR = 10.0              # fan to skirt; 10 mm so the M5 nut pockets at r 104 stay inside the plinth
+HOUSE_HALF = FAN_W / 2 + CLEAR + WALL      # 113 -> 226 square outside
 HOUSE_CORNER_R = 8.0
 Z_SKIRT_BOTTOM = Z_FLANGE + 0.5   # skirt sits on the flange plinth, 0.5 mm reveal
 Z_FAN_TOP = Z_FLANGE + FAN_T               # 44
@@ -83,7 +100,7 @@ GRILLE_RINGS = (28.0, 50.0, 72.0)
 GRILLE_BAR = 3.0
 GRILLE_SPOKES = 16                          # every 22.5 deg, includes the axes
 WALL_LAP = 6.0
-TIP_NOTCH = (7.0, 3.0)                      # half-length along wall, height: clears M5 tips at the seams
+TIP_NOTCH = None                            # (half-length, height) notch over the door screws; not needed at 10 mm clearance
 # cable window (bottom-left piece): corner window in the skirt + two tie slots
 CABLE_WIN = 28.0
 CABLE_WIN_TOP = 36.0
@@ -165,6 +182,14 @@ def flange_sector(k=0):
             + ann_sector(R_IN, R_MID - SEAM_GAP / 2,
                          a0 - LAP_HALF + g_in, a1 - LAP_HALF - g_in, Z_FLANGE))
     body = body ^ rounded_square(HOUSE_HALF, HOUSE_CORNER_R, Z_FLANGE + 2, -1)
+    # collar (follows the inner band's angular span so the seams line up)
+    r_co = COLLAR_OD / 2
+    collar = ann_sector(R_IN, r_co, a0 - LAP_HALF + g_in, a1 - LAP_HALF - g_in,
+                        COLLAR_H + 0.01, -COLLAR_H)
+    cham = (Manifold.cylinder(COLLAR_CHAMFER, r_co - COLLAR_CHAMFER, r_co + 0.01, SEG)
+            .translate([0, 0, -COLLAR_H]))
+    cham = cyl(2 * r_co + 2, COLLAR_CHAMFER + 0.02, 0, 0, -COLLAR_H - 0.01, seg=SEG) - cham
+    body = (body + collar) - cham
     r_door = DOOR_BCD / 2
     # M5 from inside: through slot + captive nut pocket on the fan face (z = top)
     body -= radial_slot(lambda x, y: cyl(DOOR_SCREW_D, Z_FLANGE + 2, x, y, -1),
@@ -178,6 +203,28 @@ def flange_sector(k=0):
     # door-face relief beyond the bearing radius (acrylic step)
     body -= ann_sector(R_BEAR, R_OUT + 1, a0 - 20, a1 + 20, RELIEF_DEPTH + 1, -1)
     body -= ann_sector(R_DEEP_RELIEF, R_OUT + 1, a0 - 20, a1 + 20, DEEP_RELIEF_DEPTH + 1, -1)
+    return body.rotate([0, 0, 90 * k]) if k else body
+
+
+# ------------------------------------------------------------- inner ring
+def inner_ring_sector(k=0):
+    """Backing ring inside the case, bolt at 0 deg, seams on the diagonals."""
+    a0, a1 = -45.0, 45.0
+    z0 = -STEEL_T - INNER_T
+    g_out = math.degrees(SEAM_GAP / 2 / INNER_R_OUT)
+    g_in = math.degrees(SEAM_GAP / 2 / INNER_R_IN)
+    body = (ann_sector(R_MID + SEAM_GAP / 2, INNER_R_OUT,
+                       a0 + LAP_HALF + g_out, a1 + LAP_HALF - g_out, INNER_T, z0)
+            + ann_sector(INNER_R_IN, R_MID - SEAM_GAP / 2,
+                         a0 - LAP_HALF + g_in, a1 - LAP_HALF - g_in, INNER_T, z0))
+    r_door = DOOR_BCD / 2
+    body -= radial_slot(lambda x, y: cyl(DOOR_SCREW_D, INNER_T + 2, x, y, z0 - 1),
+                        r_door, 0, DOOR_SLOT_PLAY)
+    body -= radial_slot(lambda x, y: cyl(INNER_CBORE_D, INNER_CBORE_DEPTH + 1, x, y, z0 - 1),
+                        r_door, 0, DOOR_SLOT_PLAY)
+    # relief on the steel-side face beyond the bearing radius
+    body -= ann_sector(INNER_R_BEAR, INNER_R_OUT + 1, a0 - 20, a1 + 20,
+                       INNER_RELIEF + 1, -STEEL_T - INNER_RELIEF)
     return body.rotate([0, 0, 90 * k]) if k else body
 
 
@@ -221,9 +268,9 @@ def housing_corner(k=0, cable=False):
     # top wall (seam at x = 0): outer half cut back, inner half extended
     body -= box(-1, WALL_LAP + g, xm + g, xo + 1, zb, zt)
     body += box(-WALL_LAP, g, xi, xm - g, Z_SKIRT_BOTTOM, zt)
-    # notch in the skirt bottom over the door screws (they sit on the seams)
-    body -= box(xi - 1, xo + 1, -TIP_NOTCH[0], TIP_NOTCH[0], zb, Z_SKIRT_BOTTOM + TIP_NOTCH[1])
-    body -= box(-TIP_NOTCH[0], TIP_NOTCH[0], xi - 1, xo + 1, zb, Z_SKIRT_BOTTOM + TIP_NOTCH[1])
+    if TIP_NOTCH:   # notch in the skirt bottom over the door screws (they sit on the seams)
+        body -= box(xi - 1, xo + 1, -TIP_NOTCH[0], TIP_NOTCH[0], zb, Z_SKIRT_BOTTOM + TIP_NOTCH[1])
+        body -= box(-TIP_NOTCH[0], TIP_NOTCH[0], xi - 1, xo + 1, zb, Z_SKIRT_BOTTOM + TIP_NOTCH[1])
     # fan screw (stock fan screw from the front into the fan corner)
     body -= cyl(FAN_SCREW_D, PLATE_T + 2, FAN_HOLE_XY, FAN_HOLE_XY, Z_FAN_TOP - 1)
     body -= cyl(FAN_SCREW_HEAD_D, FRONT_CBORE_DEPTH + 1, FAN_HOLE_XY, FAN_HOLE_XY,
@@ -319,6 +366,9 @@ def plan_png(path):
         a = rad(45 * k)
         ax.add_patch(Circle((104 * math.cos(a), 104 * math.sin(a)), 2.9, fill=False, color="k"))
     ax.add_patch(Circle((0, 0), ACRYLIC_EDGE_R, fill=False, ls="--", color="gray"))
+    ax.add_patch(Circle((0, 0), COLLAR_OD / 2, fill=False, lw=1.2, color="tab:olive"))
+    ax.add_patch(Circle((0, 0), R_IN, fill=False, lw=1.2, color="tab:olive"))
+    ax.add_patch(Circle((0, 0), INNER_R_OUT, fill=False, ls="-.", lw=1, color="tab:olive"))
     for a in CAPNUT_ANGLES:
         ax.add_patch(Circle((CAPNUT_R * math.cos(rad(a)), CAPNUT_R * math.sin(rad(a))), 3.5, color="gray"))
     ax.add_patch(Rectangle((-100, -100), 200, 200, fill=False, ls="--", color="tab:blue"))
@@ -332,13 +382,14 @@ def plan_png(path):
                            width=R_OUT - R_MID, color=cols[k], alpha=0.3, lw=0))
         ax.add_patch(Wedge((0, 0), R_MID, base - LAP_HALF, base + 90 - LAP_HALF,
                            width=R_MID - R_IN, color=cols[k], alpha=0.3, lw=0))
-    ax.add_patch(FancyBboxPatch((-105 + 8, -105 + 8), 210 - 16, 210 - 16,
+    H = HOUSE_HALF
+    ax.add_patch(FancyBboxPatch((-H + 8, -H + 8), 2 * H - 16, 2 * H - 16,
                                 boxstyle="round,pad=8", fill=False, lw=2, color="tab:brown"))
-    ax.plot([0, 0], [95, 105], "k-", lw=0.8)
-    ax.plot([0, 0], [-95, -105], "k-", lw=0.8)
-    ax.plot([95, 105], [0, 0], "k-", lw=0.8)
-    ax.plot([-95, -105], [0, 0], "k-", lw=0.8)
-    ax.add_patch(Rectangle((-105, -105), CABLE_WIN, CABLE_WIN, color="tab:red", alpha=0.5))
+    ax.plot([0, 0], [95, H], "k-", lw=0.8)
+    ax.plot([0, 0], [-95, -H], "k-", lw=0.8)
+    ax.plot([95, H], [0, 0], "k-", lw=0.8)
+    ax.plot([-95, -H], [0, 0], "k-", lw=0.8)
+    ax.add_patch(Rectangle((-H, -H), CABLE_WIN, CABLE_WIN, color="tab:red", alpha=0.5))
     for k in range(4):
         for a in MAGNET_ANGLES:
             aa = rad(a + 90 * k)
@@ -347,8 +398,8 @@ def plan_png(path):
     ax.set_ylim(-150, 150)
     ax.set_xlabel("mm   (viewed from OUTSIDE the case)")
     ax.set_title("v2 housing plan: black = door cutout/ring holes, grey = acrylic edge & cap nuts,\n"
-                 "colours = flange sectors, brown = 210 mm housing outline (seams on the axes),\n"
-                 "cyan = magnet pairs, red = cable window (bottom-left)")
+                 "colours = flange sectors, brown = 226 mm housing outline (seams on the axes),\n"
+                 "cyan = magnet pairs, red = cable window (bottom-left), olive = collar bore/OD and inner ring")
     ax.grid(True, lw=0.3)
     fig.tight_layout()
     fig.savefig(path, dpi=130)
@@ -358,6 +409,8 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     fs = flange_sector(0)
     export(fs.rotate([0, 0, -22.5]), "flange_sector_x4", z_top=Z_FLANGE)
+    ir = inner_ring_sector(0)
+    export(ir, "inner_ring_sector_x4", z_top=-STEEL_T)        # steel face down
     hc = housing_corner(0)
     export(hc, "housing_corner_x3", z_top=Z_PLATE_TOP)
     hcc = housing_corner(0, cable=True)
@@ -368,6 +421,8 @@ def main():
     asm = fs
     for k in range(1, 4):
         asm += flange_sector(k)
+    for k in range(4):
+        asm += inner_ring_sector(k)
     for k in range(4):
         asm += housing_corner(k, cable=(k == 2))      # k=2 -> bottom-left corner
         asm += bezel_sector(k)
